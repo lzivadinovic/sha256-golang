@@ -121,3 +121,55 @@ func TestMessageSchedule(t *testing.T) {
 		}
 	}
 }
+
+type choiceTest struct {
+	x, y, z, expect uint32
+}
+
+var choiceTests = choiceTest{2749825547, 776049372, 1213590135, 1783753340}
+var majorityTests = choiceTest{3758166654, 2821345890, 1850678816, 3893039714}
+
+func TestChoice(t *testing.T) {
+	output := choice(choiceTests.x, choiceTests.y, choiceTests.z)
+	if output != choiceTests.expect {
+		t.Errorf("Got: %d, expected: %d", output, choiceTests.expect)
+	}
+}
+
+func TestMajority(t *testing.T) {
+	output := majority(majorityTests.x, majorityTests.y, majorityTests.z)
+	if output != majorityTests.expect {
+		t.Errorf("Got: %d, expected: %d", output, majorityTests.expect)
+	}
+}
+
+type roundTest struct {
+	state, expect            []uint32
+	roundConst, scheduleWord uint32
+}
+
+var roundTests = roundTest{
+	[]uint32{2739944672, 3126690193, 4191866847, 1163785745, 3714074692, 1172792371, 283469062, 826169706},
+	[]uint32{1724514418, 2739944672, 3126690193, 4191866847, 1638715774, 3714074692, 1172792371, 283469062},
+	961987163,
+	3221900128,
+}
+
+func TestRoundDeclare(t *testing.T) {
+	W := roundDeclare(roundTests.state, roundTests.roundConst, roundTests.scheduleWord)
+	for index, value := range W {
+		if roundTests.expect[index] != value {
+			t.Errorf("Got: %d, expected: %d", W, roundTests.expect)
+		}
+	}
+}
+
+func TestRoundMutate(t *testing.T) {
+	// CAREFULL! It will mutate roundTests variable!!!
+	roundMutate(roundTests.state, roundTests.roundConst, roundTests.scheduleWord)
+	for index, value := range roundTests.state {
+		if roundTests.expect[index] != value {
+			t.Errorf("Got: %d, expected: %d", roundTests.state, roundTests.expect)
+		}
+	}
+}
