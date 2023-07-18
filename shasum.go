@@ -5,6 +5,20 @@ import (
 	"math/bits"
 )
 
+var (
+	// K is roundConstant is initial value for compress function
+	// it is equal to first 32 bits of decimal part of sqrt of first 32 prime numbers
+	// Just use them as const's
+	K = []uint32{0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+		0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+		0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+		0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+		0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+		0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+		0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2}
+)
+
 func addDirect(x, y uint32) uint32 {
 	return x + y
 }
@@ -74,21 +88,22 @@ func roundMutate(state []uint32, roundConst uint32, scheduleWord uint32) {
 	state[0] = t1 + t2
 }
 
-func roundDeclare(state []uint32, roundConst uint32, scheduleWord uint32) []uint32 {
-	t1 := state[7] + bigSigma1(state[4]) + choice(state[4], state[5], state[6]) + roundConst + scheduleWord
-	t2 := bigSigma0(state[0]) + majority(state[0], state[1], state[2])
-	W := make([]uint32, 8)
-	for i := 1; i < len(W); i++ {
-		W[i] = state[i-1]
+func compressBlock(initialState []uint32, block []byte) []uint32 {
+	W := messageSchedule(block)
+	state := make([]uint32, len(initialState))
+	// "deep" copy from initialState to state
+	copy(state, initialState)
+	for i := 0; i < len(W); i++ {
+		roundMutate(state, W[i], K[i])
 	}
-	// Fancy, but slow!
-	//W := append([]uint32{t1 + t2}, state...)
-	//W[4] += t1
-	// return W[0:7]
-	W[4] += t1
-	W[0] = t1 + t2
-	return W
+	// there is no native element-wise slice operation function
+	// you can use gonum, but you need to change types to Vector
+	for i := 0; i < len(state); i++ {
+		initialState[i] += state[i]
+	}
+	return initialState
 }
 
 func main() {
+
 }

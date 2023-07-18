@@ -32,3 +32,19 @@ func rightRotate(n, k uint32) uint32 {
 	// or just + add it
 	return hi | lo
 }
+
+func roundDeclare(state []uint32, roundConst uint32, scheduleWord uint32) []uint32 {
+	t1 := state[7] + bigSigma1(state[4]) + choice(state[4], state[5], state[6]) + roundConst + scheduleWord
+	t2 := bigSigma0(state[0]) + majority(state[0], state[1], state[2])
+	W := make([]uint32, 8)
+	for i := 1; i < len(W); i++ {
+		W[i] = state[i-1]
+	}
+	// Fancy, but slow!
+	//W := append([]uint32{t1 + t2}, state...)
+	//W[4] += t1
+	// return W[0:7]
+	W[4] += t1
+	W[0] = t1 + t2
+	return W
+}
